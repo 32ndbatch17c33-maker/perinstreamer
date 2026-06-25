@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#08090d">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>PERINWATCH | Premium Cinematic Hub (Server Admin)</title>
+    <style>
+        :root {
+            /* Immersive Streaming Dark Theme */
+            --bg-matte-black: #08090d;
+            --bg-card-surface: #12151e;
+            --text-pure-white: #ffffff;
+            --text-muted-gray: #94a3b8;
+            --accent-glow: #38bdf8;
+            --glass-border-light: rgba(255, 255, 255, 0.08);
+            --iw-pill-bg: rgba(255, 255, 255, 0.07);
+            --iw-pill-border: rgba(255, 255, 255, 0.15);
+            --danger-red: #f43f5e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-matte-black);
+            color: var(--text-pure-white);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #cinematicSplashPortal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-matte-black);
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            animation: fadeOutSplash 0.5s ease-in-out 2.8s forwards;
+            pointer-events: none;
+        }
+
+        .splash-brand-text {
+            font-size: 85px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: var(--text-pure-white);
+            text-transform: uppercase;
+            user-select: none;
+            animation: netflixZoomOut 2.5s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.6), 0 0 40px rgba(56, 189, 248, 0.3);
+        }
+
+        @keyframes netflixZoomOut {
+            0% { transform: scale(3.5); opacity: 0; letter-spacing: 12px; filter: blur(4px); }
+            15% { opacity: 1; filter: blur(0px); }
+            75% { transform: scale(1.0); opacity: 1; letter-spacing: 4px; }
+            100% { transform: scale(0.92); opacity: 0; letter-spacing: 2px; }
+        }
+        @keyframes fadeOutSplash { 0% { opacity: 1; visibility: visible; } 100% { opacity: 0; visibility: hidden; } }
+
+        header {
+            padding: 15px 4%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(8, 9, 13, 0.95) 60%, rgba(8, 9, 13, 0));
+            backdrop-filter: blur(20px);
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+        }
+
+        .brand-wrapper { display: flex; align-items: center; }
+        .app-title-display { font-weight: 900; font-size: 24px; letter-spacing: -1.5px; color: var(--text-pure-white); text-transform: uppercase; user-select: none; }
+        .nav-controls-group { display: flex; align-items: center; gap: 20px; }
+
+        .global-search-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border-light);
+            padding: 10px 18px;
+            border-radius: 20px;
+            color: white;
+            font-size: 13px;
+            width: 180px;
+            transition: all 0.3s ease;
+        }
+        .global-search-input:focus { outline: none; width: 250px; background: rgba(255, 255, 255, 0.1); border-color: var(--accent-glow); }
+
+        .nav-navigation-links button {
+            background: transparent;
+            color: var(--text-muted-gray);
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 15px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .nav-navigation-links button:hover, .nav-navigation-links button.active { color: var(--text-pure-white); }
+
+        .hero-video-theater-wrapper {
+            position: relative;
+            width: 100%;
+            height: 75vh;
+            min-height: 520px;
+            background: #000;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .hero-cover-photo-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border: none; }
+        .hero-video-theater-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, var(--bg-matte-black) 12%, rgba(8, 9, 13, 0.4) 50%, transparent 90%),
+                        linear-gradient(to right, rgba(8, 9, 13, 0.85) 0%, rgba(8, 9, 13, 0.2) 60%, transparent 100%);
+            z-index: 2;
+        }
+
+        .hero-billboard-content-envelope { position: absolute; bottom: 0; left: 0; right: 0; z-index: 3; width: 100%; max-width: 800px; padding: 0 4% 50px 4%; box-sizing: border-box; }
+        .hero-meta-tagline { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; color: var(--accent-glow); margin-bottom: 10px; }
+        .hero-main-title { font-size: 50px; font-weight: 900; line-height: 1.1; margin: 10px 0; text-transform: uppercase; letter-spacing: -1.5px; }
+        .hero-metadata-badges-strip { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 13px; color: #cbd5e1; margin-bottom: 18px; }
+        .iw-badge { background: var(--iw-pill-bg); border: 1px solid var(--iw-pill-border); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+        .hero-storyline-synopsis { font-size: 15px; line-height: 1.6; color: #cbd5e1; margin-bottom: 20px; }
+        .hero-cast-crew-credits { font-size: 13px; color: var(--text-muted-gray); margin-bottom: 20px; }
+        .hero-interactive-action-cluster { display: flex; gap: 12px; }
+
+        .iw-prime-btn { background: white; color: black; border: none; padding: 14px 35px; font-size: 14px; font-weight: 700; border-radius: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; }
+        .iw-prime-btn:hover { opacity: 0.9; }
+        .iw-secondary-btn { background: var(--iw-pill-bg); color: white; border: 1px solid var(--iw-pill-border); width: 48px; height: 48px; border-radius: 6px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+
+        .movie-dashboard-header-panel { padding: 120px 4% 40px 4%; background: linear-gradient(to bottom, #11141d, var(--bg-matte-black)); border-bottom: 1px solid var(--glass-border-light); }
+        .btn-back-nav { background: var(--iw-pill-bg); color: white; border: 1px solid var(--iw-pill-border); padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; margin-bottom: 25px; }
+        .btn-back-nav:hover { background: rgba(255,255,255,0.15); }
+
+        .dashboard-split-grid { display: grid; grid-template-columns: 300px 1fr; gap: 40px; }
+        @media(max-width: 768px) { .dashboard-split-grid { grid-template-columns: 1fr; } }
+        .dashboard-poster-img { width: 100%; border-radius: 12px; border: 1px solid var(--glass-border-light); box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+
+        .dashboard-player-stage-frame { position: relative; width: 100%; padding-bottom: 56.25%; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--accent-glow); box-shadow: 0 0 30px rgba(56, 189, 248, 0.2); margin-bottom: 30px; }
+        .dashboard-player-stage-frame iframe { position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; transform: translate(-50%, -50%) scale(1.35); border: none; }
+
+        main { padding: 40px 0 140px 0; position: relative; z-index: 5; }
+        .category-row-wrapper { margin-bottom: 45px; padding: 0 4%; }
+        .row-header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .row-header-actions h3 { font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
+
+        .shelf-horizontal-track { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 15px; scroll-behavior: smooth; align-items: center; }
+        .shelf-horizontal-track::-webkit-scrollbar { height: 6px; }
+        .shelf-horizontal-track::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+        .video-thumbnail-card { flex: 0 0 290px; background: #11141d; border-radius: 8px; overflow: hidden; cursor: pointer; position: relative; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s; border: 1px solid var(--glass-border-light); box-shadow: 0 4px 25px rgba(0,0,0,0.5); }
+        .video-thumbnail-card:hover { transform: translateY(-4px) scale(1.02); border-color: var(--accent-glow); box-shadow: 0 12px 25px rgba(0, 242, 255, 0.15); }
+        .thumbnail-image-container { position: relative; width: 100%; padding-bottom: 56.25%; background: #000; overflow: hidden; }
+        .thumbnail-image-container img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border: none; }
+
+        .card-metadata-footer { padding: 12px 14px; background: #0e1017; position: relative; z-index: 3; }
+        .card-metadata-title { font-size: 14px; font-weight: 600; color: var(--text-pure-white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .card-metadata-subtext { font-size: 11px; color: var(--text-muted-gray); display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .top10-premium-card { flex: 0 0 360px; display: flex; align-items: center; position: relative; cursor: pointer; transition: transform 0.4s ease; }
+        .top10-premium-card:hover { transform: scale(1.04); }
+        .top10-rank-number { font-size: 140px; font-weight: 900; line-height: 1; letter-spacing: -6px; margin-right: -10px; z-index: 4; color: #ffffff; text-shadow: 0px 8px 24px rgba(0, 0, 0, 0.8); user-select: none; }
+        .top10-image-frame { width: 250px; height: 140px; border-radius: 8px; overflow: hidden; z-index: 2; position: relative; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 35px rgba(0,0,0,0.6); }
+
+        .empty-state-notice { color: var(--text-muted-gray); padding: 30px; text-align: center; width: 100%; font-size: 14px; }
+
+        .bottom-shortcuts-ribbon { position: fixed; bottom: 0; left: 0; right: 0; height: 70px; background: linear-gradient(to top, rgba(8, 9, 13, 1) 80%, rgba(8, 9, 13, 0.85)); border-top: 1px solid var(--glass-border-light); backdrop-filter: blur(25px); z-index: 9999; display: flex; justify-content: center; align-items: center; gap: 40px; }
+        .shortcut-ribbon-btn { background: transparent; color: var(--text-muted-gray); border: none; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 8px 16px; border-radius: 20px; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .shortcut-ribbon-btn:hover, .shortcut-ribbon-btn.active { color: var(--accent-glow); background: rgba(56, 189, 248, 0.08); }
+
+        .types-flyout-panel { position: absolute; bottom: 85px; background: var(--bg-card-surface); border: 1px solid var(--glass-border-light); border-radius: 12px; padding: 15px; display: grid; grid-template-columns: repeat(2, 140px); gap: 8px; box-shadow: 0 15px 35px rgba(0,0,0,0.8); z-index: 10000; opacity: 0; transform: translateY(15px); pointer-events: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .types-flyout-panel.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .types-flyout-item-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border-light); color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .types-flyout-item-btn:hover { background: var(--accent-glow); color: black; }
+        .grid-dashboard-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+    </style>
+</head>
+<body>
+
+    <div id="cinematicSplashPortal">
+        <div class="splash-brand-text">PERIN</div>
+    </div>
+
+    <header>
+        <div class="brand-wrapper">
+            <span class="app-title-display" style="cursor:pointer;" onclick="switchView('browse')">PERINWATCH (Admin Console)</span>
+        </div>
+        <div class="nav-controls-group">
+            <input type="text" id="globalSearch" class="global-search-input" placeholder="Search entry rows..." oninput="searchCatalogEngine()">
+            <div class="nav-navigation-links">
+                <button id="tabBrowse" class="active" onclick="switchView('browse')">Home Dashboard</button>
+                <button id="tabManage" onclick="switchView('manage')">Console Editor</button>
+            </div>
+        </div>
+    </header>
+
+    <div id="movieDashboardPage" style="display: none;"></div>
+
+    <div id="mainBrowseViewRegion">
+        <div id="heroSpotlightRegion"></div>
+        <main>
+            <div id="browseView"><div id="rowsContainer"></div></div>
+
+            <div id="dynamicFilterView" style="display: none; padding: 0 4%;">
+                <div class="category-row-wrapper">
+                    <div class="row-header-actions" style="margin-bottom: 25px;">
+                        <h3 id="dynamicFilterHeadingTitle">Filtered Hub</h3>
+                        <button class="btn-back-nav" onclick="switchView('browse')">Close Filter View ×</button>
+                    </div>
+                    <div class="grid-dashboard-container" id="dynamicFilterGridTrack"></div>
+                </div>
+            </div>
+
+            <div id="managementConsoleView" style="display: none; padding: 0 4%;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px;">
+                    <div style="background: var(--bg-card-surface); padding: 25px; border-radius: 12px; border: 1px solid var(--glass-border-light);">
+                        <h3 style="margin-top: 0; color: var(--accent-glow);" id="formConsoleHeadingTitle">Create New Video Asset Entry</h3>
+                        <input type="hidden" id="formAssetId">
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; color: var(--text-muted-gray);">Movie / Series Title</label>
+                            <input type="text" id="formTitle" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border-light); padding: 10px; border-radius: 6px; color: white;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; color: var(--text-muted-gray);">Description Plot Synopsis</label>
+                            <textarea id="formDesc" rows="3" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border-light); padding: 10px; border-radius: 6px; color: white; resize: none;"></textarea>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; margin-bottom: 5px; color: var(--text-muted-gray);">Release Year</label>
+                                <input type="text" id="formYear" value="2026" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border-light); padding: 10px; border-radius: 6px; color: white;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; margin-bottom: 5px; color: var(--text-muted-gray);">Age Rating Code</label>
+                                <input type="text" id="formAgeRating" value="13+" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border-light); padding: 10px; border-radius: 6px; color: white;">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; color: var(--text-muted-gray);">Poster Photo URL Image Link</label>
+                            <input type="text" id="formPhotoUrl" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border-light); padding: 10px; border-radius: 6px; color: white;">
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-size: 12px; margin-bottom: 5px; color: var(--text-muted-gray);">Streaming Video URL Source Link (YouTube supported)</label>
+                            <input type="text" id="formStreamUrl" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border-light); padding: 10px; border-radius: 6px; color: white;">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; margin-bottom: 5px; color: var(--text-muted-gray);">Format Classification</label>
+                                <select id="formFormat" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border-light); padding: 10px; border-radius: 6px; color: white;">
+                                    <option value="Movies">Movies</option>
+                                    <option value="Shows">Shows</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; margin-bottom: 5px; color: var(--text-muted-gray);">Rank Placement Spot (Top 10 Only)</label>
+                                <input type="number" id="formRank" min="1" max="10" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border-light); padding: 10px; border-radius: 6px; color: white;">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; margin-bottom: 5px; color: var(--text-muted-gray);">Cast Crew Starring</label>
+                                <input type="text" id="formCast" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border-light); padding: 10px; border-radius: 6px; color: white;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; margin-bottom: 5px; color: var(--text-muted-gray);">Studio Producer Details</label>
+                                <input type="text" id="formCrew" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border-light); padding: 10px; border-radius: 6px; color: white;">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; font-size: 12px; margin-bottom: 8px; color: var(--text-muted-gray);">Target Category Shelf Layout Row Selection</label>
+                            <div style="display:flex; flex-direction:column; gap:6px; background:rgba(0,0,0,0.2); padding:12px; border-radius:6px; max-height:120px; overflow-y:auto; border:1px solid var(--glass-border-light);" id="formCategoryChecklistGroup"></div>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; font-size: 12px; margin-bottom: 8px; color: var(--text-muted-gray);">Genre Allocation Badges</label>
+                            <div style="display:flex; flex-wrap:wrap; gap:8px; background:rgba(0,0,0,0.2); padding:12px; border-radius:6px; border:1px solid var(--glass-border-light);" id="formGenreChecklistGroup"></div>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:white; cursor:pointer;">
+                                <input type="checkbox" id="formIsFeatured" style="cursor:pointer;"> Set as Premium Hero Spotlight Banner
+                            </label>
+                        </div>
+
+                        <div style="display:flex; gap:10px;">
+                            <button onclick="commitVideoAssetFormSubmissionData()" style="flex:1; background:var(--accent-glow); color:black; border:none; padding:12px; border-radius:6px; font-weight:700; cursor:pointer;" id="btnSubmitForm">Save/Commit Asset Block</button>
+                            <button onclick="resetAssetConsoleFormToCreationMode()" style="background:rgba(255,255,255,0.08); color:white; border:1px solid var(--glass-border-light); padding:12px 20px; border-radius:6px; cursor:pointer;">Reset Form</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="background: var(--bg-card-surface); padding: 25px; border-radius: 12px; border: 1px solid var(--glass-border-light); margin-bottom: 30px;">
+                            <h3 style="margin-top: 0; color: var(--accent-glow);">Configure Active Rows</h3>
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                <input type="text" id="newCategoryName" placeholder="New row title name..." style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border-light); padding: 10px; border-radius: 6px; color: white;">
+                                <button onclick="createNewShelfCategoryAction()" style="background: var(--accent-glow); color: black; border: none; padding: 0 20px; border-radius: 6px; font-weight: 700; cursor: pointer;">Add Row</button>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; border: 1px solid var(--glass-border-light); max-height: 180px; overflow-y: auto;" id="consoleCategoriesManagerList"></div>
+                        </div>
+
+                        <div style="background: var(--bg-card-surface); padding: 25px; border-radius: 12px; border: 1px solid var(--glass-border-light);">
+                            <h3 style="margin-top: 0; color: var(--accent-glow);">Configure Top 10 Chart Slots</h3>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 15px;">
+                                <button id="btnSelectChartMovies" onclick="selectTop10Chart('Top 10 Movies')" style="background: var(--accent-glow); color: black; padding: 10px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer;">Top 10 Movies</button>
+                                <button id="btnSelectChartShows" onclick="selectTop10Chart('Top 10 Shows')" style="background: rgba(255,255,255,0.05); color: white; padding: 10px; border: 1px solid var(--glass-border-light); border-radius: 6px; font-weight: 700; cursor: pointer;">Top 10 Shows</button>
+                            </div>
+                            <div id="top10RankConfigurationSlotsTrack" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;"></div>
+                            <button onclick="saveTop10ChartConfig()" style="width:100%; background:white; color:black; border:none; padding:12px; border-radius:6px; font-weight:700; cursor:pointer;">Update Chart Configuration</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="bottom-shortcuts-ribbon">
+        <button id="shortcutBtnMovies" class="shortcut-ribbon-btn" onclick="triggerRibbonContentFilter('Movies')">Movies Only</button>
+        <button id="shortcutBtnShows" class="shortcut-ribbon-btn" onclick="triggerRibbonContentFilter('Shows')">TV Shows Only</button>
+        <div style="position: relative;">
+            <button id="shortcutBtnGenres" class="shortcut-ribbon-btn" onclick="toggleTypesFlyoutPanel(event)">Genres Layout ↓</button>
+            <div class="types-flyout-panel" id="ribbonFlyoutPanel"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = { databaseURL: "https://uplb-22260-default-rtdb.asia-southeast1.firebasedatabase.app/" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let activeGlobalShelfCategories = [];
+        let applicationVideoDatabase = [];
+
+        let availableMovieTypesList = ["Action", "Anime", "Comedies", "Documentaries", "Dramas", "Fantasy", "Filipino", "Hollywood"];
+        window.currentEditingChart = "Top 10 Movies";
+        window.top10SelectedIds = {};
+        let catalogRunningSearchFilterQuery = "";
+
+        // Establish Real-Time Observers for Database Sync
+        onValue(ref(db, 'activeGlobalShelfCategories'), (snapshot) => {
+            if(snapshot.exists()) {
+                const data = snapshot.val();
+                activeGlobalShelfCategories = Array.isArray(data) ? data : Object.values(data);
+            }
+            refreshUIComponents();
+        });
+
+        onValue(ref(db, 'applicationVideoDatabase'), (snapshot) => {
+            if(snapshot.exists()) {
+                const data = snapshot.val();
+                applicationVideoDatabase = Array.isArray(data) ? data : Object.values(data);
+            }
+            refreshUIComponents();
+            renderTop10ChartSlots();
+        });
+
+        function refreshUIComponents() {
+            renderTargetShelfSelectionChecklistCheckboxes();
+            renderTargetTypeChecklistInputBlocks();
+            buildTypesRibbonPanelInterface();
+            renderCategoriesManagementList();
+            renderHeroFeaturedSpotlight();
+            renderMainRowsCatalogLayout();
+        }
+
+        function switchView(targetViewId) {
+            document.getElementById('movieDashboardPage').style.display = 'none';
+            document.getElementById('mainBrowseViewRegion').style.display = 'block';
+
+            document.getElementById('browseView').style.display = targetViewId === 'browse' ? 'block' : 'none';
+            document.getElementById('dynamicFilterView').style.display = targetViewId === 'filter' ? 'block' : 'none';
+            document.getElementById('managementConsoleView').style.display = targetViewId === 'manage' ? 'block' : 'none';
+
+            document.querySelectorAll('.nav-navigation-links button').forEach(b => b.classList.remove('active'));
+            if(targetViewId === 'browse') document.getElementById('tabBrowse').classList.add('active');
+            if(targetViewId === 'manage') document.getElementById('tabManage').classList.add('active');
+        }
+
+        function searchCatalogEngine() {
+            catalogRunningSearchFilterQuery = document.getElementById('globalSearch').value.toLowerCase().trim();
+            renderMainRowsCatalogLayout();
+        }
+
+        function resolveEmbedUrlEngineParser(url) {
+            if (!url) return "";
+            const ytMatch = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+            if (ytMatch && ytMatch[2].length === 11) {
+                return `https://www.youtube.com/embed/${ytMatch[2]}?rel=0&controls=1`;
+            }
+            return url;
+        }
+
+        function openMovieDashboardView(id) {
+            const asset = applicationVideoDatabase.find(v => v.id == id);
+            if (!asset) return;
+            const cleanVideoUrl = resolveEmbedUrlEngineParser(asset.streamUrl);
+            const fallbackPhoto = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200";
+
+            let badges = "";
+            (asset.types || []).forEach(t => badges += `<span class="iw-badge" style="color:#38bdf8;">${t}</span>`);
+
+            document.getElementById('mainBrowseViewRegion').style.display = 'none';
+            const d = document.getElementById('movieDashboardPage');
+            d.innerHTML = `
+                <div class="movie-dashboard-header-panel">
+                    <button class="btn-back-nav" onclick="closeMovieDashboardView()">← Back to Catalog Feed</button>
+                    <div class="dashboard-split-grid">
+                        <div>
+                            <img class="dashboard-poster-img" src="${asset.photoUrl || fallbackPhoto}" alt="">
+                            <h2 style="margin:20px 0 10px 0; font-size:28px;">${asset.title}</h2>
+                            <button class="iw-prime-btn" style="width:100%; background:var(--accent-glow);" onclick="loadAssetItemDataIntoEditorConsole(${asset.id})">Edit Entry Configuration</button>
+                        </div>
+                        <div>
+                            <div class="dashboard-player-stage-frame"><iframe src="${cleanVideoUrl}" allowfullscreen></iframe></div>
+                            <p>${asset.desc || ''}</p>
+                        </div>
+                    </div>
+                </div>`;
+            d.style.display = 'block';
+        }
+
+        function closeMovieDashboardView() {
+            document.getElementById('movieDashboardPage').style.display = 'none';
+            document.getElementById('mainBrowseViewRegion').style.display = 'block';
+        }
+
+        function renderHeroFeaturedSpotlight() {
+            const wrapper = document.getElementById('heroSpotlightRegion');
+            wrapper.innerHTML = "";
+            const item = applicationVideoDatabase.find(v => v.isFeatured === true);
+            if (!item) return;
+
+            const stageSection = document.createElement('div');
+            stageSection.className = "hero-video-theater-wrapper";
+            stageSection.onclick = () => openMovieDashboardView(item.id);
+            stageSection.innerHTML = `<img class="hero-cover-photo-canvas" src="${item.photoUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200'}" alt="">`;
+
+            const envelope = document.createElement('div');
+            envelope.className = "hero-billboard-content-envelope";
+            envelope.innerHTML = `
+                <div class="hero-meta-tagline">System Banner</div>
+                <h1 class="hero-main-title">${item.title}</h1>
+                <p class="hero-storyline-synopsis">${item.desc || ''}</p>
+                <div class="hero-interactive-action-cluster">
+                    <button class="iw-prime-btn" onclick="event.stopPropagation(); openMovieDashboardView(${item.id})">Review/Preview Asset</button>
+                </div>`;
+            stageSection.appendChild(envelope);
+            wrapper.appendChild(stageSection);
+        }
+
+        function createPosterLayoutCard(item, index, isTop10Mode) {
+            const fallbackPhoto = "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800";
+            const visualSourceImage = item.photoUrl || fallbackPhoto;
+            const rankNum = item.rank ? Number(item.rank) : index + 1;
+
+            const adminActionHtml = `
+                <div style="display: flex; gap: 6px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+                    <button style="flex:1; background: rgba(56, 189, 248, 0.15); color: var(--accent-glow); border: 1px solid rgba(56, 189, 248, 0.3); padding: 6px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;" onclick="event.stopPropagation(); loadAssetItemDataIntoEditorConsole(${item.id})">EDIT</button>
+                    <button style="background: rgba(244, 63, 94, 0.15); color: var(--danger-red); border: 1px solid rgba(244, 63, 94, 0.3); padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;" onclick="event.stopPropagation(); deleteAssetItemRecord(${item.id})">DEL</button>
+                </div>`;
+
+            if (isTop10Mode) {
+                return `
+                    <div class="top10-premium-card" onclick="openMovieDashboardView(${item.id})">
+                        <div class="top10-rank-number">${rankNum}</div>
+                        <div class="top10-image-frame">
+                            <img src="${visualSourceImage}" style="width:100%; height:100%; object-fit:cover;" alt="">
+                            <div style="position:absolute; bottom:5px; left:5px; right:5px; background:rgba(0,0,0,0.85); padding:4px; border-radius:4px;">
+                                ${adminActionHtml}
+                            </div>
+                        </div>
+                    </div>`;
+            } else {
+                return `
+                    <div class="video-thumbnail-card" onclick="openMovieDashboardView(${item.id})">
+                        <div class="thumbnail-image-container"><img src="${visualSourceImage}" alt=""></div>
+                        <div class="card-metadata-footer">
+                            <div class="card-metadata-title">${item.title}</div>
+                            <div class="card-metadata-subtext"><span>${item.year}</span><span>•</span><span>${item.ageRating || 'G'}</span></div>
+                            ${adminActionHtml}
+                        </div>
+                    </div>`;
+            }
+        }
+
+        function renderMainRowsCatalogLayout() {
+            const container = document.getElementById('rowsContainer');
+            container.innerHTML = "";
+
+            activeGlobalShelfCategories.forEach(categoryRow => {
+                const rowName = typeof categoryRow === 'object' ? categoryRow.name : categoryRow;
+                const isTop10Row = rowName.toLowerCase().includes('top 10');
+
+                let matchedAssets = applicationVideoDatabase.filter(v => v.categories && v.categories.includes(rowName));
+                if (isTop10Row) {
+                    matchedAssets = matchedAssets.filter(v => v.rank && Number(v.rank) >= 1 && Number(v.rank) <= 10).sort((a, b) => Number(a.rank) - Number(b.rank));
+                } else {
+                    matchedAssets.sort((a, b) => a.title.localeCompare(b.title, undefined, {numeric: true, sensitivity: 'base'}));
+                }
+
+                if (catalogRunningSearchFilterQuery) {
+                    matchedAssets = matchedAssets.filter(v => v.title.toLowerCase().includes(catalogRunningSearchFilterQuery));
+                }
+
+                const section = document.createElement('div');
+                section.className = "category-row-wrapper";
+                section.innerHTML = `<div class="row-header-actions"><h3>${rowName}</h3></div>`;
+
+                const track = document.createElement('div');
+                track.className = "shelf-horizontal-track";
+
+                if (matchedAssets.length === 0) {
+                    track.innerHTML = `<div class="empty-state-notice">No entries deployed in this section profile.</div>`;
+                } else {
+                    matchedAssets.forEach((item, idx) => { track.innerHTML += createPosterLayoutCard(item, idx, isTop10Row); });
+                }
+                section.appendChild(track);
+                container.appendChild(section);
+            });
+        }
+
+        function createNewShelfCategoryAction() {
+            const input = document.getElementById('newCategoryName');
+            const name = input.value.trim();
+            if(!name) return;
+            if(activeGlobalShelfCategories.some(c => (typeof c === 'object' ? c.name : c) === name)) return;
+
+            activeGlobalShelfCategories.push({ name: name, shuffleMovies: false });
+            set(ref(db, 'activeGlobalShelfCategories'), activeGlobalShelfCategories);
+            input.value = "";
+        }
+
+        function deleteShelfCategoryAction(name) {
+            activeGlobalShelfCategories = activeGlobalShelfCategories.filter(c => (typeof c === 'object' ? c.name : c) !== name);
+            set(ref(db, 'activeGlobalShelfCategories'), activeGlobalShelfCategories);
+        }
+
+        function updateShelfCategoryNameAction(index, newName) {
+            const cleanName = newName.trim();
+            if (!cleanName) return;
+            if (typeof activeGlobalShelfCategories[index] === 'object') {
+                activeGlobalShelfCategories[index].name = cleanName;
+            } else {
+                activeGlobalShelfCategories[index] = cleanName;
+            }
+            set(ref(db, 'activeGlobalShelfCategories'), activeGlobalShelfCategories);
+        }
+
+        function renderCategoriesManagementList() {
+            const container = document.getElementById('consoleCategoriesManagerList');
+            container.innerHTML = "";
+            activeGlobalShelfCategories.forEach((c, idx) => {
+                const name = typeof c === 'object' ? c.name : c;
+                container.innerHTML += `
+                    <div style="display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <input type="text" value="${name}" onchange="updateShelfCategoryNameAction(${idx}, this.value)" style="background:rgba(0,0,0,0.3); border:1px solid var(--glass-border-light); padding:6px 10px; border-radius:6px; color:white; font-size:13px; flex:1;">
+                        <button onclick="deleteShelfCategoryAction('${name}')" style="background:transparent; border:none; color:var(--danger-red); font-size:11px; font-weight:700; cursor:pointer;">REMOVE</button>
+                    </div>`;
+            });
+        }
+
+        function renderTargetShelfSelectionChecklistCheckboxes() {
+            const container = document.getElementById('formCategoryChecklistGroup');
+            container.innerHTML = "";
+            activeGlobalShelfCategories.forEach((c, idx) => {
+                const name = typeof c === 'object' ? c.name : c;
+                container.innerHTML += `
+                    <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:white; cursor:pointer;">
+                        <input type="checkbox" name="formCategories" value="${name}" style="cursor:pointer;"> ${name}
+                    </label>`;
+            });
+        }
+
+        function renderTargetTypeChecklistInputBlocks() {
+            const container = document.getElementById('formGenreChecklistGroup');
+            container.innerHTML = "";
+            availableMovieTypesList.forEach(t => {
+                container.innerHTML += `
+                    <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:white; cursor:pointer;">
+                        <input type="checkbox" name="formTypes" value="${t}" style="cursor:pointer;"> ${t}
+                    </label>`;
+            });
+        }
+
+        function selectTop10Chart(chartName) {
+            window.currentEditingChart = chartName;
+            document.getElementById('btnSelectChartMovies').style.background = chartName === 'Top 10 Movies' ? 'var(--accent-glow)' : 'rgba(255,255,255,0.05)';
+            document.getElementById('btnSelectChartMovies').style.color = chartName === 'Top 10 Movies' ? 'black' : 'white';
+            document.getElementById('btnSelectChartShows').style.background = chartName === 'Top 10 Shows' ? 'var(--accent-glow)' : 'rgba(255,255,255,0.05)';
+            document.getElementById('btnSelectChartShows').style.color = chartName === 'Top 10 Shows' ? 'black' : 'white';
+            renderTop10ChartSlots();
+        }
+
+        function renderTop10ChartSlots() {
+            const track = document.getElementById('top10RankConfigurationSlotsTrack');
+            track.innerHTML = "";
+            window.top10SelectedIds = {};
+
+            for(let i = 1; i <= 10; i++) {
+                const matched = applicationVideoDatabase.find(v => v.categories && v.categories.includes(window.currentEditingChart) && Number(v.rank) === i);
+                if(matched) window.top10SelectedIds[i] = matched.id;
+
+                const slot = document.createElement('div');
+                slot.style.cssText = "display:flex; align-items:center; gap:10px; position:relative;";
+                slot.innerHTML = `
+                    <span style="font-size:13px; font-weight:700; width:25px; color:var(--accent-glow);">#${i}</span>
+                    <input type="text" id="top10InputSlot_${i}" value="${matched ? matched.title : ''}" oninput="handleTop10AutocompleteSearch(${i})" placeholder="Search titles to assign..." style="flex:1; background:rgba(0,0,0,0.3); border:1px solid var(--glass-border-light); padding:8px; border-radius:4px; color:white; font-size:12px;">
+                    <div id="top10SuggestionsSlot_${i}" style="display:none; position:absolute; top:35px; left:35px; right:0; background:var(--bg-card-surface); border:1px solid var(--accent-glow); border-radius:4px; z-index:100; max-height:120px; overflow-y:auto; padding:5px;"></div>`;
+                track.appendChild(slot);
+            }
+        }
+
+        function handleTop10AutocompleteSearch(rankIndex) {
+            const field = document.getElementById(`top10InputSlot_${rankIndex}`);
+            const box = document.getElementById(`top10SuggestionsSlot_${rankIndex}`);
+            const val = field.value.toLowerCase().trim();
+            box.innerHTML = "";
+
+            if(!val) { box.style.display = 'none'; return; }
+            const matches = applicationVideoDatabase.filter(v => v.title.toLowerCase().includes(val));
+            if(matches.length === 0) { box.style.display = 'none'; return; }
+
+            matches.forEach(video => {
+                const row = document.createElement('div');
+                row.style.cssText = "padding:6px; font-size:12px; cursor:pointer; color:white; border-bottom:1px solid rgba(255,255,255,0.05);";
+                row.innerText = video.title;
+                row.onclick = () => {
+                    field.value = video.title;
+                    window.top10SelectedIds[rankIndex] = video.id;
+                    box.style.display = 'none';
+                };
+                box.appendChild(row);
+            });
+            box.style.display = 'block';
+        }
+
+        function saveTop10ChartConfig() {
+            applicationVideoDatabase.forEach(item => {
+                if(item.categories && item.categories.includes(window.currentEditingChart)) {
+                    item.categories = item.categories.filter(cat => cat !== window.currentEditingChart);
+                    item.rank = "";
+                }
+            });
+
+            for(let i = 1; i <= 10; i++) {
+                const id = window.top10SelectedIds[i];
+                if(id) {
+                    const matched = applicationVideoDatabase.find(v => v.id == id);
+                    if(matched) {
+                        if(!matched.categories) matched.categories = [];
+                        if(!matched.categories.includes(window.currentEditingChart)) matched.categories.push(window.currentEditingChart);
+                        matched.rank = i;
+                    }
+                }
+            }
+            set(ref(db, 'applicationVideoDatabase'), applicationVideoDatabase);
+            alert("Chart changes published successfully!");
+        }
+
+        function commitVideoAssetFormSubmissionData() {
+            const assetId = document.getElementById('formAssetId').value;
+            const title = document.getElementById('formTitle').value.trim();
+            const desc = document.getElementById('formDesc').value.trim();
+            const year = document.getElementById('formYear').value.trim();
+            const ageRating = document.getElementById('formAgeRating').value.trim();
+            const photoUrl = document.getElementById('formPhotoUrl').value.trim();
+            const streamUrl = document.getElementById('formStreamUrl').value.trim();
+            const format = document.getElementById('formFormat').value;
+            const rank = document.getElementById('formRank').value;
+            const cast = document.getElementById('formCast').value.trim();
+            const crew = document.getElementById('formCrew').value.trim();
+            const isFeatured = document.getElementById('formIsFeatured').checked;
+
+            if(!title) return alert("Please specify a film or series title profile entry.");
+
+            const cats = Array.from(document.querySelectorAll('input[name="formCategories"]:checked')).map(el => el.value);
+            const types = Array.from(document.querySelectorAll('input[name="formTypes"]:checked')).map(el => el.value);
+
+            if(isFeatured) {
+                applicationVideoDatabase.forEach(v => v.isFeatured = false);
+            }
+
+            const record = {
+                id: assetId ? Number(assetId) : Date.now(),
+                title, desc, year, ageRating, photoUrl, streamUrl, format, cast, crew, isFeatured,
+                categories: cats, types, rank: rank ? Number(rank) : ""
+            };
+
+            if(assetId) {
+                const index = applicationVideoDatabase.findIndex(v => v.id == assetId);
+                if(index !== -1) applicationVideoDatabase[index] = record;
+            } else {
+                applicationVideoDatabase.push(record);
+            }
+
+            set(ref(db, 'applicationVideoDatabase'), applicationVideoDatabase);
+            resetAssetConsoleFormToCreationMode();
+            switchView('browse');
+        }
+
+        function loadAssetItemDataIntoEditorConsole(id) {
+            const item = applicationVideoDatabase.find(v => v.id == id);
+            if(!item) return;
+
+            switchView('manage');
+            document.getElementById('formConsoleHeadingTitle').innerText = `Update Config: ${item.title}`;
+            document.getElementById('btnSubmitForm').innerText = "Update Existing Record Entry";
+
+            document.getElementById('formAssetId').value = item.id;
+            document.getElementById('formTitle').value = item.title;
+            document.getElementById('formDesc').value = item.desc || "";
+            document.getElementById('formYear').value = item.year || "2026";
+            document.getElementById('formAgeRating').value = item.ageRating || "";
+            document.getElementById('formPhotoUrl').value = item.photoUrl || "";
+            document.getElementById('formStreamUrl').value = item.streamUrl || "";
+            document.getElementById('formFormat').value = item.format || "Movies";
+            document.getElementById('formRank').value = item.rank || "";
+            document.getElementById('formCast').value = item.cast || "";
+            document.getElementById('formCrew').value = item.crew || "";
+            document.getElementById('formIsFeatured').checked = !!item.isFeatured;
+
+            document.querySelectorAll('input[name="formCategories"]').forEach(el => el.checked = (item.categories || []).includes(el.value));
+            document.querySelectorAll('input[name="formTypes"]').forEach(el => el.checked = (item.types || []).includes(el.value));
+        }
+
+        function resetAssetConsoleFormToCreationMode() {
+            document.getElementById('formConsoleHeadingTitle').innerText = "Create New Video Asset Entry";
+            document.getElementById('btnSubmitForm').innerText = "Save/Commit Asset Block";
+
+            document.getElementById('formAssetId').value = "";
+            document.getElementById('formTitle').value = "";
+            document.getElementById('formDesc').value = "";
+            document.getElementById('formYear').value = "2026";
+            document.getElementById('formAgeRating').value = "13+";
+            document.getElementById('formPhotoUrl').value = "";
+            document.getElementById('formStreamUrl').value = "";
+            document.getElementById('formRank').value = "";
+            document.getElementById('formCast').value = "";
+            document.getElementById('formCrew').value = "";
+            document.getElementById('formIsFeatured').checked = false;
+
+            document.querySelectorAll('input[name="formCategories"]').forEach(el => el.checked = false);
+            document.querySelectorAll('input[name="formTypes"]').forEach(el => el.checked = false);
+        }
+
+        function deleteAssetItemRecord(id) {
+            if(!confirm("Are you sure you want to completely erase this video record profile entry?")) return;
+            applicationVideoDatabase = applicationVideoDatabase.filter(v => v.id != id);
+            set(ref(db, 'applicationVideoDatabase'), applicationVideoDatabase);
+            closeMovieDashboardView();
+        }
+
+        function triggerRibbonContentFilter(mode, specificValue = "") {
+            closeMovieDashboardView();
+            switchView('filter');
+            const targetGridTrack = document.getElementById('dynamicFilterGridTrack');
+            const targetHeading = document.getElementById('dynamicFilterHeadingTitle');
+            targetGridTrack.innerHTML = '';
+
+            let isolatedMatches = applicationVideoDatabase.filter(v => mode === 'Movies' ? v.format === 'Movies' : v.format === 'Shows');
+            if(mode === 'Type') {
+                targetHeading.innerText = `Genre Selection: ${specificValue}`;
+                isolatedMatches = applicationVideoDatabase.filter(v => v.types && v.types.includes(specificValue));
+            } else {
+                targetHeading.innerText = mode === 'Movies' ? "Filter Catalog: Premium Features" : "Filter Catalog: TV Series";
+            }
+
+            if (mode === 'Shows') {
+                isolatedMatches.sort((a, b) => a.title.localeCompare(b.title, undefined, {numeric: true, sensitivity: 'base'}));
+            }
+
+            isolatedMatches.forEach((item, idx) => { targetGridTrack.innerHTML += createPosterLayoutCard(item, idx, false); });
+        }
+
+        function toggleTypesFlyoutPanel(e) { e.stopPropagation(); document.getElementById('ribbonFlyoutPanel').classList.toggle('visible'); }
+        function buildTypesRibbonPanelInterface() {
+            const panel = document.getElementById('ribbonFlyoutPanel'); panel.innerHTML = '';
+            availableMovieTypesList.forEach(t => {
+                const btn = document.createElement('button'); btn.className = "types-flyout-item-btn"; btn.innerText = t;
+                btn.onclick = () => { panel.classList.remove('visible'); triggerRibbonContentFilter('Type', t); };
+                panel.appendChild(btn);
+            });
+        }
+
+        document.addEventListener('click', () => document.getElementById('ribbonFlyoutPanel').classList.remove('visible'));
+
+        window.switchView = switchView;
+        window.searchCatalogEngine = searchCatalogEngine;
+        window.openMovieDashboardView = openMovieDashboardView;
+        window.closeMovieDashboardView = closeMovieDashboardView;
+        window.clearStreamLogs = () => {};
+        window.createNewShelfCategoryAction = createNewShelfCategoryAction;
+        window.deleteShelfCategoryAction = deleteShelfCategoryAction;
+        window.updateShelfCategoryNameAction = updateShelfCategoryNameAction;
+        window.commitVideoAssetFormSubmissionData = commitVideoAssetFormSubmissionData;
+        window.loadAssetItemDataIntoEditorConsole = loadAssetItemDataIntoEditorConsole;
+        window.resetAssetConsoleFormToCreationMode = resetAssetConsoleFormToCreationMode;
+        window.deleteAssetItemRecord = deleteAssetItemRecord;
+        window.selectTop10Chart = selectTop10Chart;
+        window.handleTop10AutocompleteSearch = handleTop10AutocompleteSearch;
+        window.saveTop10ChartConfig = saveTop10ChartConfig;
+        window.triggerRibbonContentFilter = triggerRibbonContentFilter;
+        window.toggleTypesFlyoutPanel = toggleTypesFlyoutPanel;
+    </script>
+</body>
+</html>
