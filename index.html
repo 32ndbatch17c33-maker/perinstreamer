@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#08090d">
+<link rel="apple-touch-icon" href="./icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="strict-origin-when-cross-origin" />
@@ -745,5 +748,13 @@
         // Initialize display cycles
         refreshUIComponents();
     </script>
+    // Register Service Worker for PWA installation support
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker successfully registered with scope:', reg.scope))
+            .catch(err => console.error('Service Worker registration failed:', err));
+    });
+}
 </body>
 </html>
