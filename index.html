@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#08090d">
+<link rel="apple-touch-icon" href="./icon-192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>PERINWATCH | Premium Cinematic Hub (Viewer)</title>
+    <style>
+        :root {
+            /* Immersive Streaming Dark Theme */
+            --bg-matte-black: #08090d;
+            --bg-card-surface: #12151e;
+            --text-pure-white: #ffffff;
+            --text-muted-gray: #94a3b8;
+            --accent-glow: #38bdf8;
+            --glass-border-light: rgba(255, 255, 255, 0.08);
+            --iw-pill-bg: rgba(255, 255, 255, 0.07);
+            --iw-pill-border: rgba(255, 255, 255, 0.15);
+            --danger-red: #f43f5e;
+        }
+
+        html, body {
+            /* Prevents double-tap zoom triggers and text scaling quirks */
+            touch-action: manipulation;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-matte-black);
+            color: var(--text-pure-white);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Persistent Header Layout */
+        header {
+            padding: 15px 4%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(8, 9, 13, 0.95) 60%, rgba(8, 9, 13, 0));
+            backdrop-filter: blur(20px);
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+        }
+
+        .brand-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .app-title-display {
+            font-weight: 900;
+            font-size: 24px;
+            letter-spacing: -1.5px;
+            color: var(--text-pure-white);
+            text-transform: uppercase;
+            user-select: none;
+        }
+
+        .nav-controls-group {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .global-search-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border-light);
+            padding: 10px 18px;
+            border-radius: 20px;
+            color: white;
+            font-size: 13px;
+            width: 180px;
+            transition: all 0.3s ease;
+        }
+
+        .global-search-input:focus {
+            outline: none;
+            width: 250px;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-glow);
+        }
+
+        .nav-navigation-links button {
+            background: transparent;
+            color: var(--text-muted-gray);
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 15px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-navigation-links button:hover, .nav-navigation-links button.active {
+            color: var(--text-pure-white);
+        }
+
+        /* Hero Spotlight Cover Frame */
+        .hero-video-theater-wrapper {
+            position: relative;
+            width: 100%;
+            height: 75vh;
+            min-height: 520px;
+            background: #000;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .hero-cover-photo-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            border: none;
+        }
+
+        .hero-video-theater-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, var(--bg-matte-black) 12%, rgba(8, 9, 13, 0.4) 50%, transparent 90%),
+                        linear-gradient(to right, rgba(8, 9, 13, 0.85) 0%, rgba(8, 9, 13, 0.2) 60%, transparent 100%);
+            z-index: 2;
+        }
+
+        .hero-billboard-content-envelope {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            z-index: 3;
+            width: 100%;
+            max-width: 800px;
+            padding: 0 4% 50px 4%;
+            box-sizing: border-box;
+        }
+
+        .hero-meta-tagline {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--accent-glow);
+            margin-bottom: 10px;
+        }
+
+        .hero-main-title {
+            font-size: 50px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin: 10px 0;
+            text-transform: uppercase;
+            letter-spacing: -1.5px;
+        }
+
+        .hero-metadata-badges-strip {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: #cbd5e1;
+            margin-bottom: 18px;
+        }
+
+        .iw-badge {
+            background: var(--iw-pill-bg);
+            border: 1px solid var(--iw-pill-border);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .hero-storyline-synopsis {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+        }
+
+        .hero-cast-crew-credits {
+            font-size: 13px;
+            color: var(--text-muted-gray);
+            margin-bottom: 20px;
+        }
+
+        .hero-interactive-action-cluster {
+            display: flex;
+            gap: 12px;
+        }
+
+        .iw-prime-btn {
+            background: white; color: black; border: none; padding: 14px 35px;
+            font-size: 14px; font-weight: 700; border-radius: 6px; cursor: pointer;
+            transition: opacity 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .iw-prime-btn:hover { opacity: 0.9; }
+
+        .iw-secondary-btn {
+            background: var(--iw-pill-bg); color: white; border: 1px solid var(--iw-pill-border);
+            width: 48px; height: 48px; border-radius: 6px; cursor: pointer;
+            font-size: 20px; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Movie Dashboard Layout Panels */
+        .movie-dashboard-header-panel {
+            padding: 120px 4% 40px 4%;
+            background: linear-gradient(to bottom, #11141d, var(--bg-matte-black));
+            border-bottom: 1px solid var(--glass-border-light);
+        }
+        .btn-back-nav {
+            background: var(--iw-pill-bg); color: white; border: 1px solid var(--iw-pill-border);
+            padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; margin-bottom: 25px;
+        }
+        .btn-back-nav:hover { background: rgba(255,255,255,0.15); }
+
+        .dashboard-split-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 40px;
+        }
+        @media(max-width: 900px) {
+            .dashboard-split-grid { grid-template-columns: 1fr; }
+        }
+        .dashboard-poster-img {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border-light);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        /* Full Screen Embedded Adaptive Player Stage Box */
+        .dashboard-player-stage-frame {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* Fixed 16:9 Cinema Aspect Ratio */
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--accent-glow);
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.2);
+            margin-bottom: 30px;
+        }
+        .dashboard-player-stage-frame iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: none;
+        }
+
+        /* Movie Shelves Architecture Rows Feed */
+        main { padding: 40px 0 100px 0; position: relative; z-index: 5; }
+        .category-row-wrapper { margin-bottom: 45px; padding: 0 4%; }
+        
+        .row-header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .row-header-actions h3 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .shelf-horizontal-track {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 15px;
+            scroll-behavior: smooth;
+            align-items: center;
+        }
+
+        .shelf-horizontal-track::-webkit-scrollbar { height: 6px; }
+        .shelf-horizontal-track::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+        /* Premium Standard Card Designs */
+        .video-thumbnail-card {
+            flex: 0 0 290px;
+            background: #11141d;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s;
+            border: 1px solid var(--glass-border-light);
+            box-shadow: 0 4px 25px rgba(0,0,0,0.5);
+        }
+        .video-thumbnail-card:hover { 
+            transform: translateY(-4px) scale(1.02); 
+            border-color: var(--accent-glow);
+            box-shadow: 0 12px 25px rgba(0, 242, 255, 0.15);
+        }
+
+        .thumbnail-image-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            background: #000;
+            overflow: hidden;
+        }
+        
+        .thumbnail-image-container img {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border: none;
+        }
+
+        .card-metadata-footer {
+            padding: 12px 14px;
+            background: #0e1017;
+            position: relative;
+            z-index: 3;
+        }
+        .card-metadata-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-pure-white);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        .card-metadata-subtext {
+            font-size: 11px;
+            color: var(--text-muted-gray);
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Top 10 Stylized Row */
+        .top10-premium-card {
+            flex: 0 0 360px;
+            display: flex;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            height: 180px;
+            transition: transform 0.4s ease;
+        }
+        .top10-premium-card:hover { transform: scale(1.04); }
+
+        .top10-rank-number {
+            font-size: 140px;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -6px;
+            margin-right: -10px;
+            z-index: 4;
+            color: #ffffff; 
+            text-shadow: 0px 8px 24px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255,255,255,0.2);
+            user-select: none;
+        }
+
+        .top10-image-frame {
+            width: 250px;
+            height: 140px;
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 2;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.6);
+        }
+
+        .empty-state-notice { color: var(--text-muted-gray); padding: 30px; text-align: center; width: 100%; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-wrapper">
+            <span id="appLogoText" class="app-title-display">PERINWATCH</span>
+        </div>
+        <div class="nav-controls-group">
+            <input type="text" id="globalSearch" class="global-search-input" placeholder="Search entries, categories..." oninput="searchCatalogEngine()">
+            <div class="nav-navigation-links">
+                <button id="tabBrowse" class="active" onclick="switchView('browse')">Home</button>
+                <button id="tabMyList" onclick="switchView('mylist')">My Stuff</button>
+                <button id="tabHistory" onclick="switchView('history')">History Logs</button>
+            </div>
+        </div>
+    </header>
+
+    <div id="movieDashboardPage" style="display: none;"></div>
+
+    <div id="mainBrowseViewRegion">
+        <div id="heroSpotlightRegion"></div>
+        <main>
+            <div id="browseView">
+                <div id="rowsContainer"></div>
+            </div>
+
+            <div id="myListView" style="display: none; padding: 0 4%;">
+                <div class="category-row-wrapper">
+                    <div class="row-header-actions"><h3>My Favorites List</h3></div>
+                    <div class="shelf-horizontal-track" id="watchlistTrack"></div>
+                </div>
+            </div>
+
+            <div id="historyView" style="display: none; padding: 0 4%;">
+                <div class="category-row-wrapper">
+                    <div class="row-header-actions">
+                        <h3>Recent History Tracking</h3>
+                        <button style="background: rgba(244, 63, 94, 0.1); color: var(--danger-red); border: 1px solid rgba(244, 63, 94, 0.2); padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;" onclick="clearStreamLogs()">Wipe logs</button>
+                    </div>
+                    <div class="shelf-horizontal-track" id="historyTrack"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Firebase Core Setup Mapping Reference
+        const firebaseConfig = {
+            databaseURL: "https://uplb-22260-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Core Application Context states (Synchronized or Session Local)
+        let activeGlobalShelfCategories = ["Top 10 Highlights", "Trending Content", "Tatak iWant"];
+        let applicationVideoDatabase = [
+            {
+                id: 1001,
+                title: "Sigabo",
+                categories: ["Top 10 Highlights", "Trending Content", "Tatak iWant"],
+                isFeatured: true,
+                photoUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200",
+                streamUrl: "https://www.youtube.com/watch?v=M1msV599GNo",
+                cast: "Coco Martin, Julia Montes",
+                crew: "Dreamscape Entertainment",
+                year: "2026",
+                ageRating: "16+",
+                desc: "After serving eight years in prison, a spunky man is granted parole. But his long-awaited freedom comes at a price—he is forced into a covert government program."
+            },
+            {
+                id: 1002,
+                title: "Family by Choice",
+                categories: ["Trending Content"],
+                isFeatured: false,
+                photoUrl: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800",
+                streamUrl: "https://www.youtube.com/watch?v=F_fP_n_f0bE",
+                cast: "Ensemble Cast",
+                crew: "Viu Premium Studios",
+                year: "2026",
+                ageRating: "PG",
+                desc: "Three non-biologically related individuals navigate the intricate boundaries of family, love, and childhood traumas together."
+            }
+        ];
+
+        // Track user lists locally on viewer browser instance
+        let userFavoritesArrayIds = JSON.parse(localStorage.getItem('pw_favs')) || [];
+        let userStreamingHistoryArrayIds = JSON.parse(localStorage.getItem('pw_hist')) || [];
+        let catalogRunningSearchFilterQuery = "";
+
+        // Helper randomizer utility function to reshuffle arrays non-destructively
+        function shuffleArray(array) {
+            let shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Establish Real-Time Observers for Database Nodes
+        onValue(ref(db, 'activeGlobalShelfCategories'), (snapshot) => {
+            if(snapshot.exists()) {
+                const data = snapshot.val();
+                let incomingCats = Array.isArray(data) ? data : Object.values(data);
+                // Reshuffles row sequences instantly upon opening/reading
+                activeGlobalShelfCategories = shuffleArray(incomingCats);
+                refreshUIComponents();
+            } else {
+                activeGlobalShelfCategories = shuffleArray(activeGlobalShelfCategories);
+            }
+        });
+
+        onValue(ref(db, 'applicationVideoDatabase'), (snapshot) => {
+            if(snapshot.exists()) {
+                const data = snapshot.val();
+                let incomingVideos = Array.isArray(data) ? data : Object.values(data);
+                // Reshuffles item inside arrays dynamically for a unique environment cycle
+                applicationVideoDatabase = shuffleArray(incomingVideos);
+                refreshUIComponents();
+            } else {
+                applicationVideoDatabase = shuffleArray(applicationVideoDatabase);
+            }
+        });
+
+        function refreshUIComponents() {
+            renderHeroFeaturedSpotlight();
+            renderMainRowsCatalogLayout();
+            renderFavoritesWatchlistTrack();
+            renderHistoryLogTrack();
+        }
+
+        function switchView(targetViewId) {
+            closeMovieDashboardView();
+            document.getElementById('tabBrowse').classList.toggle('active', targetViewId === 'browse');
+            document.getElementById('tabMyList').classList.toggle('active', targetViewId === 'mylist');
+            document.getElementById('tabHistory').classList.toggle('active', targetViewId === 'history');
+            
+            document.getElementById('browseView').style.display = targetViewId === 'browse' ? 'block' : 'none';
+            document.getElementById('myListView').style.display = targetViewId === 'mylist' ? 'block' : 'none';
+            document.getElementById('historyView').style.display = targetViewId === 'history' ? 'block' : 'none';
+            
+            if(targetViewId === 'mylist') renderFavoritesWatchlistTrack();
+            if(targetViewId === 'history') renderHistoryLogTrack();
+        }
+
+        function searchCatalogEngine() {
+            catalogRunningSearchFilterQuery = document.getElementById('globalSearch').value.toLowerCase().trim();
+            renderMainRowsCatalogLayout();
+        }
+
+        function resolveEmbedUrlEngineParser(url) {
+            if (!url) return "";
+            const ytMatch = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+            if (ytMatch && ytMatch[2].length === 11) {
+                return `https://www.youtube.com/embed/${ytMatch[2]}?rel=0&controls=1&modestbranding=1&showinfo=0&iv_load_policy=3`;
+            }
+            return url;
+        }
+
+        function openMovieDashboardView(id) {
+            const asset = applicationVideoDatabase.find(v => v.id == id);
+            if (!asset) return;
+
+            if(!userStreamingHistoryArrayIds.includes(asset.id)) {
+                userStreamingHistoryArrayIds.unshift(asset.id);
+                localStorage.setItem('pw_hist', JSON.stringify(userStreamingHistoryArrayIds));
+            }
+
+            const cleanVideoUrl = resolveEmbedUrlEngineParser(asset.streamUrl);
+            const fallbackPhoto = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200";
+            const isFav = userFavoritesArrayIds.includes(asset.id);
+
+            const dashboardPage = document.getElementById('movieDashboardPage');
+            dashboardPage.innerHTML = `
+                <div class="movie-dashboard-header-panel">
+                    <button class="btn-back-nav" onclick="closeMovieDashboardView()">← Back to Catalog Feed</button>
+                    
+                    <div class="dashboard-split-grid">
+                        <div>
+                            <img class="dashboard-poster-img" src="${asset.photoUrl || fallbackPhoto}" alt="Cover">
+                            <h2 style="margin:20px 0 10px 0; font-size:28px;">${asset.title}</h2>
+                            <div style="display:flex; gap:10px; font-size:13px; color:var(--text-muted-gray); margin-bottom:15px;">
+                                <span>${asset.year}</span>
+                                <span>•</span>
+                                <span class="iw-badge" style="background:rgba(56, 189, 248, 0.15); border-color:var(--accent-glow); color:white;">${asset.ageRating}</span>
+                            </div>
+                            <button class="iw-prime-btn" style="width:100%; text-align:center; padding:12px 0;" onclick="toggleFavoritesActionFromDashboard(${asset.id}, this)">
+                                ${isFav ? '✓ Added to Watchlist' : '+ Add to Favorites'}
+                            </button>
+                        </div>
+                        
+                        <div>
+                            <div class="dashboard-player-stage-frame">
+                                <iframe src="${cleanVideoUrl}" allowfullscreen></iframe>
+                            </div>
+                            
+                            <h4 style="margin:0 0 10px 0; font-size:14px; text-transform:uppercase; color:var(--accent-glow); letter-spacing:1px;">Storyline Overview</h4>
+                            <p style="font-size:16px; line-height:1.7; color:#cbd5e1; margin-bottom:25px;">${asset.desc || 'No description provided.'}</p>
+                            
+                            <div style="font-size:14px; color:var(--text-muted-gray); display:flex; flex-direction:column; gap:8px;">
+                                <div><strong style="color:white;">Starring:</strong> ${asset.cast || 'N/A'}</div>
+                                <div><strong style="color:white;">Studios / Crew:</strong> ${asset.crew || 'N/A'}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('mainBrowseViewRegion').style.display = 'none';
+            dashboardPage.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function closeMovieDashboardView() {
+            document.getElementById('movieDashboardPage').style.display = 'none';
+            document.getElementById('movieDashboardPage').innerHTML = ''; 
+            document.getElementById('mainBrowseViewRegion').style.display = 'block';
+        }
+
+        function toggleFavoritesActionFromDashboard(id, elementButton) {
+            toggleFavoritesAction(id);
+            const isFav = userFavoritesArrayIds.includes(id);
+            elementButton.innerText = isFav ? '✓ Added to Watchlist' : '+ Add to Favorites';
+        }
+
+        function toggleFavoritesAction(id) {
+            const idx = userFavoritesArrayIds.indexOf(id);
+            if(idx > -1) { userFavoritesArrayIds.splice(idx, 1); } else { userFavoritesArrayIds.push(id); }
+            localStorage.setItem('pw_favs', JSON.stringify(userFavoritesArrayIds));
+            renderHeroFeaturedSpotlight();
+            renderFavoritesWatchlistTrack();
+        }
+
+        function renderHeroFeaturedSpotlight() {
+            const wrapper = document.getElementById('heroSpotlightRegion');
+            wrapper.innerHTML = '';
+
+            const featuredItem = applicationVideoDatabase.find(item => item.isFeatured === true) || applicationVideoDatabase[0];
+            if (!featuredItem) return;
+
+            const isFav = userFavoritesArrayIds.includes(featuredItem.id);
+            const fallbackPhoto = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200";
+
+            const stageSection = document.createElement('div');
+            stageSection.className = "hero-video-theater-wrapper";
+            stageSection.onclick = () => openMovieDashboardView(featuredItem.id);
+            stageSection.innerHTML = `<img class="hero-cover-photo-canvas" src="${featuredItem.photoUrl || fallbackPhoto}" alt="Cover">`;
+
+            const envelope = document.createElement('div');
+            envelope.className = "hero-billboard-content-envelope";
+            envelope.innerHTML = `
+                <div class="hero-meta-tagline">🍿 Spotlight Premium Feature Presentation</div>
+                <h2 class="hero-main-title">${featuredItem.title}</h2>
+                <div class="hero-metadata-badges-strip">
+                    <span>${featuredItem.year}</span>
+                    <span>•</span>
+                    <span class="iw-badge">${featuredItem.ageRating}</span>
+                    <span class="iw-badge">PREMIUM STREAM</span>
+                </div>
+                <div class="hero-storyline-synopsis" style="margin-bottom:15px;">${featuredItem.desc || ''}</div>
+                <div class="hero-cast-crew-credits">Starring: <span>${featuredItem.cast || 'N/A'}</span></div>
+                <div class="hero-interactive-action-cluster">
+                    <button class="iw-prime-btn" onclick="event.stopPropagation(); openMovieDashboardView(${featuredItem.id})">► Open Movie Dashboard</button>
+                    <button class="iw-secondary-btn" onclick="event.stopPropagation(); toggleFavoritesAction(${featuredItem.id})">${isFav ? '✓' : '+'}</button>
+                </div>
+            `;
+            
+            stageSection.appendChild(envelope);
+            wrapper.appendChild(stageSection);
+        }
+
+        function createPosterLayoutCard(item, index, isTop10Mode) {
+            const fallbackPhoto = "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800";
+            const visualSourceImage = item.photoUrl || fallbackPhoto;
+
+            if (isTop10Mode) {
+                const card = document.createElement('div');
+                card.className = 'top10-premium-card';
+                card.onclick = () => openMovieDashboardView(item.id);
+                card.innerHTML = `
+                    <div class="top10-rank-number">${index + 1}</div>
+                    <div class="top10-image-frame">
+                        <div class="thumbnail-image-container" style="padding-bottom:56.25%;">
+                            <img src="${visualSourceImage}" alt="Poster">
+                        </div>
+                    </div>
+                `;
+                return card;
+            } else {
+                const card = document.createElement('div');
+                card.className = 'video-thumbnail-card';
+                card.onclick = () => openMovieDashboardView(item.id);
+                card.innerHTML = `
+                    <div class="thumbnail-image-container">
+                        <img src="${visualSourceImage}" alt="Poster">
+                    </div>
+                    <div class="card-metadata-footer">
+                        <div class="card-metadata-title">${item.title}</div>
+                        <div class="card-metadata-subtext">
+                            <span>${item.year}</span>
+                            <span>•</span>
+                            <span style="color:var(--accent-glow); font-weight:bold;">${item.ageRating}</span>
+                        </div>
+                    </div>
+                `;
+                return card;
+            }
+        }
+
+        function renderMainRowsCatalogLayout() {
+            const container = document.getElementById('rowsContainer');
+            container.innerHTML = '';
+
+            let filteredDataset = applicationVideoDatabase.filter(v => {
+                return v.title.toLowerCase().includes(catalogRunningSearchFilterQuery) || 
+                       v.cast.toLowerCase().includes(catalogRunningSearchFilterQuery) ||
+                       v.categories.some(c => c.toLowerCase().includes(catalogRunningSearchFilterQuery));
+            });
+
+            activeGlobalShelfCategories.forEach(rowName => {
+                const section = document.createElement('div');
+                section.className = 'category-row-wrapper';
+                
+                const isTop10 = rowName.toLowerCase().includes("top 10");
+
+                const headingTitle = document.createElement('h3');
+                headingTitle.innerText = rowName;
+
+                const headerRowWrapper = document.createElement('div');
+                headerRowWrapper.className = "row-header-actions";
+                headerRowWrapper.appendChild(headingTitle);
+                section.appendChild(headerRowWrapper);
+
+                const track = document.createElement('div');
+                track.className = 'shelf-horizontal-track';
+
+                const shelfMatches = filteredDataset.filter(v => v.categories.includes(rowName));
+                if(shelfMatches.length === 0) {
+                    track.innerHTML = '<div class="empty-state-notice" style="text-align:left; padding:10px 0;">This shelf row is currently empty.</div>';
+                } else {
+                    shelfMatches.forEach((item, index) => {
+                        track.appendChild(createPosterLayoutCard(item, index, isTop10));
+                    });
+                }
+
+                section.appendChild(track);
+                container.appendChild(section);
+            });
+        }
+
+        function renderFavoritesWatchlistTrack() {
+            const track = document.getElementById('watchlistTrack');
+            track.innerHTML = '';
+            const listItems = applicationVideoDatabase.filter(v => userFavoritesArrayIds.includes(v.id));
+            if(listItems.length === 0) {
+                track.innerHTML = '<div class="empty-state-notice">Your favorites list is currently empty.</div>';
+                return;
+            }
+            listItems.forEach(item => { track.appendChild(createPosterLayoutCard(item, 0, false)); });
+        }
+
+        function renderHistoryLogTrack() {
+            const track = document.getElementById('historyTrack');
+            track.innerHTML = '';
+            const historyItems = applicationVideoDatabase.filter(v => userStreamingHistoryArrayIds.includes(v.id));
+            if(historyItems.length === 0) {
+                track.innerHTML = '<div class="empty-state-notice">No history logs gathered yet.</div>';
+                return;
+            }
+            historyItems.forEach(item => { track.appendChild(createPosterLayoutCard(item, 0, false)); });
+        }
+
+        function clearStreamLogs() {
+            userStreamingHistoryArrayIds = [];
+            localStorage.removeItem('pw_hist');
+            renderHistoryLogTrack();
+        }
+
+        // Expose critical functions to window scope for native DOM inline listeners
+        window.switchView = switchView;
+        window.searchCatalogEngine = searchCatalogEngine;
+        window.openMovieDashboardView = openMovieDashboardView;
+        window.closeMovieDashboardView = closeMovieDashboardView;
+        window.toggleFavoritesActionFromDashboard = toggleFavoritesActionFromDashboard;
+        window.toggleFavoritesAction = toggleFavoritesAction;
+        window.clearStreamLogs = clearStreamLogs;
+
+        // Initialize dynamic shuffle sequence on document load
+        activeGlobalShelfCategories = shuffleArray(activeGlobalShelfCategories);
+        applicationVideoDatabase = shuffleArray(applicationVideoDatabase);
+
+        // Initialize display cycles
+        refreshUIComponents();
+
+        // Register Service Worker for PWA installation support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker successfully registered with scope:', reg.scope))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
