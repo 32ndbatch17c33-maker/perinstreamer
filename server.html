@@ -819,12 +819,6 @@
         window.triggerRibbonContentFilter = triggerRibbonContentFilter;
         window.toggleTypesFlyoutPanel = toggleTypesFlyoutPanel;
     </script>
-    if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('PERINWATCH PWA Service Worker Registered Successfully!'))
-      .catch(err => console.error('Service Worker registration failed: ', err));
-  });
-}
+    
 </body>
 </html>
